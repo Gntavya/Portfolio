@@ -1,0 +1,19 @@
+{
+  "name": "student-portfolio",
+  "version": "1.0.0",
+  "description": "About student of amrita vishwa vidyapeetham",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "echo \"Error: no text specified\"&& exit 1"
+  },
+  "author": "Gantavya Dev Mathur",
+  "license": "Amrita_HD",
+  "devDependencies": {
+    "electron": "^41.5.0",
+    "electron-packager": "^17.1.2"
+  },
+  "dependencies": {
+    "express": "^5.2.1"
+  }
+}

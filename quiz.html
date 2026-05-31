@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Quiz — Portfolio</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <span class="nav-title">Student Portfolio</span>
+    <a href="./index.html">Home</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./todo.html">To-Do</a>
+    <a href="./quiz.html" class="active">Quiz</a>
+    <a href="./ecommerce.html">Shop</a>
+
+    <button class="theme-btn" id="themeBtn" type="button">☀️</button>
+  </nav>
+<main class="page">
+    <section class="hero" style="min-height:28vh;">
+      <div class="hero-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Student Portfolio</div>
+        <h1>Quiz Module</h1>
+        <p>Test your knowledge, then add your own questions below.</p>
+      </div>
+    </section>
+
+    <section class="section">
+
+      <!-- ── TAKE QUIZ ── -->
+      <div class="panel" style="margin-bottom:22px;">
+
+        <div class="tts-bar">
+          <span>🔊 Hear this page read aloud</span>
+          <button class="btn secondary" id="ttsBtn" type="button">Read Page</button>
+          <button class="btn secondary" id="ttsStop" type="button">Stop</button>
+        </div>
+
+        <h2>Take the Quiz</h2>
+        <p class="meta">Choose one answer per question, then click Submit.</p>
+
+        <form id="quizForm" class="quiz-form"></form>
+
+        <div class="btn-row" style="margin-top:16px;">
+          <button class="btn" type="submit" form="quizForm">Submit Quiz ✓</button>
+          <button class="btn secondary" type="button" id="resetQuiz">Reset</button>
+        </div>
+
+        <div id="quizResult"></div>
+
+        <a class="back-link" href="./index.html">← Back</a>
+      </div>
+
+      <!-- ── ADD QUESTION ── -->
+      <div class="add-panel">
+        <h3>➕ Add a New Question</h3>
+        <p class="meta" style="margin-bottom:16px;">Fill in the question, all four options, then select which is correct and click Add.</p>
+
+        <div style="display:grid;gap:11px;">
+          <input type="text" class="field" id="newQText" placeholder="Question text…"/>
+
+          <div id="optionsContainer">
+            <div class="option-row">
+              <input type="radio" name="correctOpt" value="0" required title="Mark as correct answer"/>
+              <input type="text" class="opt-input" placeholder="Option A"/>
+              <span class="correct-label">✓ correct</span>
+            </div>
+            <div class="option-row">
+              <input type="radio" name="correctOpt" value="1"/>
+              <input type="text" class="opt-input" placeholder="Option B"/>
+              <span class="correct-label">✓ correct</span>
+            </div>
+            <div class="option-row">
+              <input type="radio" name="correctOpt" value="2"/>
+              <input type="text" class="opt-input" placeholder="Option C"/>
+              <span class="correct-label">✓ correct</span>
+            </div>
+            <div class="option-row">
+              <input type="radio" name="correctOpt" value="3"/>
+              <input type="text" class="opt-input" placeholder="Option D"/>
+              <span class="correct-label">✓ correct</span>
+            </div>
+          </div>
+
+          <div class="btn-row">
+            <button class="btn" type="button" id="addQuestionBtn">Add Question</button>
+            <button class="btn secondary" type="button" id="clearCustomBtn">Clear My Questions</button>
+          </div>
+          <div class="notice" id="qNotice"></div>
+        </div>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    /* ─── Theme ─── */
+    (function(){
+      const dark = (localStorage.getItem('themeMode') || '') === 'dark' ||
+                   (!localStorage.getItem('themeMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    })();
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('theme-dark');
+      document.body.classList.toggle('theme-dark', dark);
+      localStorage.setItem('themeMode', dark ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    });
+
+    /* ─── TTS ─── */
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+    document.getElementById('ttsBtn').addEventListener('click', () => {
+      const qs = getAllQuestions();
+      speak(`Quiz module. There are ${qs.length} questions. Answer each one and click Submit to see your score. You can also add your own questions using the form below.`);
+    });
+    document.getElementById('ttsStop').addEventListener('click', () => window.speechSynthesis && window.speechSynthesis.cancel());
+
+    /* ─── Default questions ─── */
+    const defaultQuestions = [
+      { text:'Which HTML tag creates a hyperlink?',            options:['<link>','<a>','<href>','<url>'],            correct:1 },
+      { text:'Which tag is used for the largest heading?',     options:['<h6>','<h1>','<head>','<title>'],           correct:1 },
+      { text:'Which CSS property changes text colour?',        options:['font-style','background-color','color','text-align'], correct:2 },
+      { text:'Which CSS property adds spacing inside an element?', options:['margin','padding','border','align'],    correct:1 },
+      { text:'Which HTML tag inserts an image?',               options:['<img>','<image>','<pic>','<src>'],          correct:0 },
+      { text:'Which CSS value arranges items in a row or column?', options:['display:flex','position:absolute','float:left','z-index'], correct:0 },
+    ];
+
+    function loadCustom()   { return JSON.parse(localStorage.getItem('quizCustom') || '[]'); }
+    function saveCustom(a)  { localStorage.setItem('quizCustom', JSON.stringify(a)); }
+    function getAllQuestions() { return [...defaultQuestions, ...loadCustom()]; }
+
+    /* ─── Render quiz ─── */
+    function renderQuiz() {
+      const form = document.getElementById('quizForm');
+      const result = document.getElementById('quizResult');
+      form.innerHTML = '';
+      result.innerHTML = '';
+
+      getAllQuestions().forEach((q, i) => {
+        const card = document.createElement('div');
+        card.className = 'quiz-card';
+        card.id = `qcard-${i}`;
+        const letters = ['A','B','C','D','E'];
+        card.innerHTML = `
+          <div class="q-num">Question ${i+1} of ${getAllQuestions().length}</div>
+          <div class="q-text">${q.text}</div>
+          ${q.options.map((opt, oi) => `
+            <label>
+              <input type="radio" name="q${i}" value="${oi}"/>
+              <span>${letters[oi]}. ${opt}</span>
+            </label>
+          `).join('')}
+        `;
+        form.appendChild(card);
+      });
+    }
+
+    renderQuiz();
+    setTimeout(() => speak('Quiz page loaded. Answer the questions and click Submit Quiz to see your score.'), 500);
+
+    /* ─── Submit ─── */
+    document.getElementById('quizForm').addEventListener('submit', e => {
+      e.preventDefault();
+      const all = getAllQuestions();
+      let score = 0;
+
+      all.forEach((q, i) => {
+        const sel  = document.querySelector(`input[name="q${i}"]:checked`);
+        const card = document.getElementById(`qcard-${i}`);
+        card.classList.remove('correct','wrong');
+        if (sel && parseInt(sel.value) === q.correct) { score++; card.classList.add('correct'); }
+        else { card.classList.add('wrong'); }
+      });
+
+      const pct = Math.round(score / all.length * 100);
+      const msg = score === all.length ? 'Perfect score!' :
+                  pct >= 70 ? 'Great job!' :
+                  pct >= 50 ? 'Keep practising.' : 'Review and try again.';
+
+      document.getElementById('quizResult').innerHTML = `
+        <div class="result-box">
+          <div class="score-num">${score}/${all.length}</div>
+          <p>${msg} (${pct}% correct)</p>
+        </div>
+      `;
+      speak(`You scored ${score} out of ${all.length}. ${msg}`);
+    });
+
+    /* ─── Reset ─── */
+    document.getElementById('resetQuiz').addEventListener('click', () => {
+      document.getElementById('quizForm').reset();
+      document.getElementById('quizResult').innerHTML = '';
+      document.querySelectorAll('.quiz-card').forEach(c => c.classList.remove('correct','wrong'));
+    });
+
+    /* ─── Add question ─── */
+    document.getElementById('addQuestionBtn').addEventListener('click', () => {
+      const text   = document.getElementById('newQText').value.trim();
+      const opts   = Array.from(document.querySelectorAll('.opt-input')).map(i => i.value.trim());
+      const radio  = document.querySelector('input[name="correctOpt"]:checked');
+      const notice = document.getElementById('qNotice');
+
+      if (!text)              { notice.textContent = '⚠ Enter a question.'; return; }
+      if (opts.some(o => !o)) { notice.textContent = '⚠ Fill all four options.'; return; }
+      if (!radio)             { notice.textContent = '⚠ Select the correct answer (radio button).'; return; }
+
+      const custom = loadCustom();
+      custom.push({ text, options: opts, correct: parseInt(radio.value) });
+      saveCustom(custom);
+
+      document.getElementById('newQText').value = '';
+      document.querySelectorAll('.opt-input').forEach(i => i.value = '');
+      document.querySelectorAll('input[name="correctOpt"]').forEach(r => r.checked = false);
+
+      notice.textContent = `✓ Added! Total: ${getAllQuestions().length} questions.`;
+      setTimeout(() => { notice.textContent = ''; }, 3000);
+      renderQuiz();
+    });
+
+    /* ─── Clear custom ─── */
+    document.getElementById('clearCustomBtn').addEventListener('click', () => {
+      if (!loadCustom().length) { document.getElementById('qNotice').textContent = 'No custom questions to clear.'; return; }
+      if (confirm('Remove all custom questions?')) {
+        saveCustom([]);
+        renderQuiz();
+        document.getElementById('qNotice').textContent = 'Custom questions removed.';
+        setTimeout(() => { document.getElementById('qNotice').textContent = ''; }, 2500);
+      }
+    });
+  </script>
+</body>
+</html>

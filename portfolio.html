@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Portfolio</title>
+  <link rel="stylesheet" href="./style.css" />
+</head>
+
+<body>
+  <nav class="navbar">
+    <span class="nav-title">Student Portfolio</span>
+    <a href="./index.html">Home</a>
+    <a href="./portfolio.html" class="active">Portfolio</a>
+    <a href="./todo.html">To-Do</a>
+    <a href="./quiz.html">Quiz</a>
+    <a href="./ecommerce.html">Shop</a>
+
+    <button class="theme-btn" id="themeBtn" type="button">☀️</button>
+  </nav>
+<main class="page">
+    <section class="hero" style="min-height:28vh;">
+      <div class="hero-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Student Portfolio</div>
+        <h1>About Me</h1>
+        <p>A student passionate about technology, design, and problem solving.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+
+        <div class="tts-bar">
+          <span>🔊 Hear this page read aloud</span>
+          <button class="btn secondary" id="ttsBtn" type="button">Read Page</button>
+          <button class="btn secondary" id="ttsStop" type="button">Stop</button>
+        </div>
+
+        <div style="display:flex;align-items:center;gap:18px;margin-bottom:26px;flex-wrap:wrap;">
+          <div class="portfolio-avatar">
+            <img src="gantavya.png" alt="Gantavya Mathur" />
+          </div>
+          <div>
+            <h2 style="margin-bottom:3px;">Gantavya Dev Mathur</h2>
+            <p class="meta" style="margin:0;">1st Year · Amrita Vishwa Vidyapeetham, Haridwar</p>
+          </div>
+        </div>
+
+        <div class="module-grid">
+
+          <div class="module-link">
+            <h3>👤 About</h3>
+            <p>Pursuing engineering with a focus on AI, UI development, Python, and embedded systems. Passionate about
+              building smart, well-designed solutions.</p>
+          </div>
+
+          <div class="module-link">
+            <h3>🛠 Technical Skills</h3>
+            <div class="skill-tags">
+              <span class="skill-tag">HTML / CSS</span>
+              <span class="skill-tag">JavaScript</span>
+              <span class="skill-tag">Python</span>
+              <span class="skill-tag">C / C++</span>
+              <span class="skill-tag">Java</span>
+              <span class="skill-tag">Arduino</span>
+              <span class="skill-tag">Electron.js</span>
+              <span class="skill-tag">IoT</span>
+            </div>
+          </div>
+
+          <div class="module-link">
+            <h3>🏆 Projects</h3>
+            <p>Quantum mechanics simulation, SVD image processing app, smart irrigation system, AI-powered portfolio
+              site, campus newsletter redesign.</p>
+          </div>
+
+          <div class="module-link">
+            <h3>📬 Contact</h3>
+            <p>
+              Email: gantavyamathur@gmail.com<br />
+              Phone: 8989543005<br />
+              Campus: Amrita, Haridwar
+            </p>
+          </div>
+
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Contact Form -->
+        <h3 style="font-family:var(--font-head);font-size:1.05rem;font-weight:600;margin-bottom:14px;">📬 Send a Message</h3>
+        <div class="form" id="contactForm">
+          <input type="text" id="cfName" placeholder="Your name…" maxlength="80" />
+          <input type="email" id="cfEmail" placeholder="Your email…" maxlength="120" />
+          <textarea id="cfMsg" placeholder="Your message…" rows="3" style="resize:vertical;"></textarea>
+          <div class="btn-row">
+            <button class="btn" type="button" id="cfSubmit">Send Message</button>
+          </div>
+          <div class="notice" id="cfNotice"></div>
+        </div>
+
+        <a class="back-link" href="./index.html">← Back</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (function () {
+      const dark = (localStorage.getItem('themeMode') || '') === 'dark' ||
+        (!localStorage.getItem('themeMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    })();
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('theme-dark');
+      document.body.classList.toggle('theme-dark', dark);
+      localStorage.setItem('themeMode', dark ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    });
+
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+
+    document.getElementById('ttsBtn').addEventListener('click', () => {
+      speak('Portfolio page. Name: Gantavya Mathur. First year student at Amrita Vishwa Vidyapeetham, Haridwar. ' +
+        'Skills include HTML, CSS, JavaScript, Python, C, Java, Arduino, and IoT. ' +
+        'Projects include a quantum mechanics simulation, image processing app, smart irrigation system, AI portfolio, and campus newsletter. ' +
+        'Contact: gantavyamathur at gmail dot com.');
+    });
+    document.getElementById('ttsStop').addEventListener('click', () => window.speechSynthesis && window.speechSynthesis.cancel());
+
+    setTimeout(() => speak('Portfolio page. You can hear a full read-aloud by clicking the Read Page button.'), 500);
+
+    /* ─── Contact form validation ─── */
+    document.getElementById('cfSubmit').addEventListener('click', () => {
+      const name  = document.getElementById('cfName').value.trim();
+      const email = document.getElementById('cfEmail').value.trim();
+      const msg   = document.getElementById('cfMsg').value.trim();
+      const notice = document.getElementById('cfNotice');
+
+      if (!name)  { notice.textContent = '⚠ Please enter your name.';    return; }
+      if (!email) { notice.textContent = '⚠ Please enter your email.';   return; }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                    notice.textContent = '⚠ Please enter a valid email.'; return; }
+      if (!msg)   { notice.textContent = '⚠ Please enter a message.';    return; }
+
+      notice.textContent = '✓ Message sent! (saved locally)';
+      notice.style.color = 'var(--success)';
+
+      // Save to localStorage
+      const msgs = JSON.parse(localStorage.getItem('contactMessages') || '[]');
+      msgs.push({ name, email, msg, time: new Date().toISOString() });
+      localStorage.setItem('contactMessages', JSON.stringify(msgs));
+
+      // Also write to disk via Node.js fs (Exp 8)
+      if (window.electronAPI && window.electronAPI.writeData) {
+        window.electronAPI.writeData('contactMessages', msgs);
+      }
+
+      document.getElementById('cfName').value  = '';
+      document.getElementById('cfEmail').value = '';
+      document.getElementById('cfMsg').value   = '';
+      setTimeout(() => { notice.textContent = ''; notice.style.color = ''; }, 3000);
+    });
+  </script>
+</body>
+
+</html>

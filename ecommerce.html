@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shop — Portfolio</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <span class="nav-title">Student Portfolio</span>
+    <a href="./index.html">Home</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./todo.html">To-Do</a>
+    <a href="./quiz.html">Quiz</a>
+    <a href="./ecommerce.html" class="active">Shop</a>
+    <span id="cartBadge" style="margin-left:4px;padding:4px 12px;border-radius:999px;background:var(--btn-bg);color:var(--btn-text);font-size:0.8rem;font-weight:600;">🛒 Cart (0)</span>
+    <button class="theme-btn" id="themeBtn" type="button">☀️</button>
+  </nav>
+<main class="page">
+    <section class="hero" style="min-height:28vh;">
+      <div class="hero-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Student Portfolio</div>
+        <h1>Product Shop</h1>
+        <p>Upload a product with an image, name, price, and description.</p>
+      </div>
+    </section>
+
+    <section class="section">
+
+      <!-- ── ADD PRODUCT ── -->
+      <div class="add-panel" style="margin-bottom:22px;">
+        <h3>➕ Add New Product</h3>
+        <p class="meta" style="margin-bottom:16px;">Fill in the details and click Upload Product. The item will appear in the grid instantly.</p>
+
+        <div class="upload-grid">
+          <!-- Image -->
+          <div class="img-upload-area" id="dropArea" style="grid-column:1/-1;">
+            <input type="file" id="productImage" accept="image/*"/>
+            <img class="img-preview" id="imgPreview" alt="Preview"/>
+            <div class="upload-placeholder" id="uploadPlaceholder">
+              <strong>📷</strong>
+              Click or drag an image here
+            </div>
+          </div>
+
+          <input type="text"   id="productName"  class="field" placeholder="Product name…" maxlength="80"/>
+          <input type="number" id="productPrice" class="field" placeholder="Price (₹)" min="0" step="0.01"/>
+          <textarea id="productDesc" class="field" placeholder="Short description…" rows="3" style="grid-column:1/-1;resize:vertical;"></textarea>
+        </div>
+
+        <div class="btn-row" style="margin-top:14px;">
+          <button class="btn" id="addProductBtn" type="button">Upload Product ↑</button>
+          <button class="btn secondary" id="clearAllBtn" type="button">Clear All Products</button>
+        </div>
+        <div class="notice" id="productNotice"></div>
+      </div>
+
+      <!-- ── PRODUCT GRID ── -->
+      <div class="panel">
+
+        <div class="tts-bar">
+          <span>🔊 Hear this page read aloud</span>
+          <button class="btn secondary" id="ttsBtn" type="button">Read Page</button>
+          <button class="btn secondary" id="ttsStop" type="button">Stop</button>
+        </div>
+
+        <h2 id="gridTitle">Products (0)</h2>
+        <p class="meta">All products are saved locally and persist between sessions.</p>
+
+        <div class="product-grid" id="productGrid"></div>
+
+        <a class="back-link" href="./index.html">← Back</a>
+      </div>
+
+    </section>
+  </main>
+
+  <script>
+    /* ─── Theme ─── */
+    (function(){
+      const dark = (localStorage.getItem('themeMode') || '') === 'dark' ||
+                   (!localStorage.getItem('themeMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    })();
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('theme-dark');
+      document.body.classList.toggle('theme-dark', dark);
+      localStorage.setItem('themeMode', dark ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    });
+
+    /* ─── TTS ─── */
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+    document.getElementById('ttsBtn').addEventListener('click', () => {
+      const products = loadProducts();
+      if (!products.length) { speak('The shop is empty. Use the form above to add a product.'); return; }
+      speak(`There are ${products.length} products in the shop. ` +
+        products.map(p => `${p.name}, priced at ${p.price != null ? '₹' + p.price : 'free'}.`).join(' '));
+    });
+    document.getElementById('ttsStop').addEventListener('click', () => window.speechSynthesis && window.speechSynthesis.cancel());
+
+    /* ─── State ─── */
+    let pendingImage = null;
+
+    function loadProducts()    { return JSON.parse(localStorage.getItem('portfolioProducts') || '[]'); }
+    function saveProducts(arr) { localStorage.setItem('portfolioProducts', JSON.stringify(arr)); }
+
+    function escapeHtml(s) {
+      return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    function formatPrice(p) {
+      if (p == null || p === '') return 'Free';
+      return '₹' + parseFloat(p).toLocaleString('en-IN', { minimumFractionDigits: 0, maximumFractionDigits: 2 });
+    }
+
+    /* ─── Render ─── */
+    function render() {
+      const products = loadProducts();
+      const grid  = document.getElementById('productGrid');
+      const title = document.getElementById('gridTitle');
+      title.textContent = `Products (${products.length})`;
+
+      if (!products.length) {
+        grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1;"><div class="empty-icon">🛍</div>No products yet. Add one above!</div>`;
+        return;
+      }
+
+      grid.innerHTML = products.map((p, idx) => `
+        <div class="product-card">
+          <div class="product-img">
+            ${p.image ? `<img src="${p.image}" alt="${escapeHtml(p.name)}"/>` : '🛒'}
+          </div>
+          <div class="product-info">
+            <div class="product-name">${escapeHtml(p.name)}</div>
+            <div class="product-desc">${escapeHtml(p.desc || 'No description.')}</div>
+            <div class="product-footer">
+              <div class="product-price">${formatPrice(p.price)}</div>
+              <button class="btn secondary cart-add" data-idx="${idx}" style="padding:6px 12px;font-size:0.78rem;">+ Cart</button>
+              <button class="product-del" data-idx="${idx}" title="Remove">×</button>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    /* ─── Image preview ─── */
+    document.getElementById('productImage').addEventListener('change', function() {
+      const file = this.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = e => {
+        pendingImage = e.target.result;
+        document.getElementById('imgPreview').src = pendingImage;
+        document.getElementById('imgPreview').style.display = 'block';
+        document.getElementById('uploadPlaceholder').style.display = 'none';
+      };
+      reader.readAsDataURL(file);
+    });
+
+    /* ─── Drag & drop ─── */
+    const dropArea = document.getElementById('dropArea');
+    dropArea.addEventListener('dragover', e => { e.preventDefault(); dropArea.style.borderColor = 'var(--accent)'; });
+    dropArea.addEventListener('dragleave', () => { dropArea.style.borderColor = ''; });
+    dropArea.addEventListener('drop', e => {
+      e.preventDefault(); dropArea.style.borderColor = '';
+      const file = e.dataTransfer.files[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = ev => {
+          pendingImage = ev.target.result;
+          document.getElementById('imgPreview').src = pendingImage;
+          document.getElementById('imgPreview').style.display = 'block';
+          document.getElementById('uploadPlaceholder').style.display = 'none';
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    /* ─── Cart ─── */
+    function loadCart()    { return JSON.parse(localStorage.getItem('portfolioCart') || '[]'); }
+    function saveCart(arr) { localStorage.setItem('portfolioCart', JSON.stringify(arr)); }
+
+    function updateCartBadge() {
+      const cart = loadCart();
+      const badge = document.getElementById('cartBadge');
+      if (badge) badge.textContent = `🛒 Cart (${cart.length})`;
+    }
+
+    /* ─── Delete + Add to Cart via delegation ─── */
+    document.getElementById('productGrid').addEventListener('click', e => {
+      const del     = e.target.closest('.product-del');
+      const cartBtn = e.target.closest('.cart-add');
+
+      if (del) {
+        const idx  = parseInt(del.dataset.idx);
+        const prods = loadProducts();
+        prods.splice(idx, 1);
+        saveProducts(prods);
+        render();
+      }
+
+      if (cartBtn) {
+        const idx   = parseInt(cartBtn.dataset.idx);
+        const prods = loadProducts();
+        const item  = prods[idx];
+        if (!item) return;
+        const cart = loadCart();
+        cart.push({ name: item.name, price: item.price, id: Date.now() });
+        saveCart(cart);
+        updateCartBadge();
+        const notice = document.getElementById('productNotice');
+        notice.textContent = `✓ "${item.name}" added to cart!`;
+        setTimeout(() => { notice.textContent = ''; }, 2000);
+      }
+    });
+
+    updateCartBadge();
+
+    /* ─── Add product ─── */
+    document.getElementById('addProductBtn').addEventListener('click', () => {
+      const name   = document.getElementById('productName').value.trim();
+      const price  = document.getElementById('productPrice').value;
+      const desc   = document.getElementById('productDesc').value.trim();
+      const notice = document.getElementById('productNotice');
+
+      if (!name) { notice.textContent = '⚠ Enter a product name.'; return; }
+
+      const prods = loadProducts();
+      prods.push({ name, price: price !== '' ? parseFloat(price) : null, desc: desc || '', image: pendingImage || null, id: Date.now() });
+      saveProducts(prods);
+      render();
+
+      /* Reset form */
+      document.getElementById('productName').value  = '';
+      document.getElementById('productPrice').value = '';
+      document.getElementById('productDesc').value  = '';
+      document.getElementById('productImage').value = '';
+      document.getElementById('imgPreview').style.display = 'none';
+      document.getElementById('uploadPlaceholder').style.display = '';
+      pendingImage = null;
+
+      notice.textContent = '✓ Product added!';
+      setTimeout(() => { notice.textContent = ''; }, 2500);
+    });
+
+    /* ─── Clear all ─── */
+    document.getElementById('clearAllBtn').addEventListener('click', () => {
+      const prods = loadProducts();
+      if (!prods.length) return;
+      if (confirm(`Remove all ${prods.length} product${prods.length > 1 ? 's' : ''}?`)) {
+        saveProducts([]);
+        render();
+      }
+    });
+
+    render();
+    setTimeout(() => speak('Shop page loaded. Use the form at the top to add a product with an image, name, price, and description.'), 500);
+  </script>
+</body>
+</html>

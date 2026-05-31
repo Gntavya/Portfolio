@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Portfolio</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script defer src="./script.js"></script>
+</head>
+
+<body>
+  <nav class="navbar">
+    <span class="nav-title">Student Portfolio</span>
+    <a href="./index.html" class="active">Home</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./todo.html">To-Do</a>
+    <a href="./quiz.html">Quiz</a>
+    <a href="./ecommerce.html">Shop</a>
+
+    <button class="theme-btn" id="themeBtn" type="button">☀️</button>
+  </nav>
+<main class="page">
+    <section class="hero">
+      <div class="hero-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Student Portfolio</div>
+        <h1 id="greetingText">Welcome</h1>
+        <p>Search by keyword to explore this portfolio. Try <em>portfolio</em>, <em>todo</em>, <em>quiz</em>, or
+          <em>shop</em>. Use the mic or type to navigate.</p>
+      </div>
+    </section>
+    <div class="search-wrapper">
+      <div class="search-bar" id="searchBar">
+        <span class="search-icon">⌕</span>
+        <input id="searchInput" type="text" placeholder="Search modules…" autocomplete="off" aria-label="Search" />
+        <button class="voice-btn" id="voiceBtn" type="button" title="Read page aloud">🔊</button>
+        <button class="voice-toggle" id="toggleVoice" type="button">Voice ON</button>
+        <button class="mic-btn" id="micBtn" type="button" title="Ctrl+M to toggle mic">🎤</button>
+      </div>
+      <div id="suggestionsBox" class="suggestions-box"></div>
+      <div class="hint-row">
+        <div class="mic-status" id="micStatus">Microphone is off</div>
+        <div class="shortcut-tip"><kbd>Ctrl</kbd>+<kbd>M</kbd> mic &nbsp;·&nbsp; <kbd>Esc</kbd> stop</div>
+      </div>
+      <div class="footer-tip">Speak or type to search — results open instantly</div>
+    </div>
+    <section class="content" id="content"></section>
+  </main>
+</body>
+
+</html>

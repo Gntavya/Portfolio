@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>To-Do — Portfolio</title>
+  <link rel="stylesheet" href="./style.css"/>
+</head>
+<body>
+  <nav class="navbar">
+    <span class="nav-title">Student Portfolio</span>
+    <a href="./index.html">Home</a>
+    <a href="./portfolio.html">Portfolio</a>
+    <a href="./todo.html" class="active">To-Do</a>
+    <a href="./quiz.html">Quiz</a>
+    <a href="./ecommerce.html">Shop</a>
+
+    <button class="theme-btn" id="themeBtn" type="button">☀️</button>
+  </nav>
+<main class="page">
+    <section class="hero" style="min-height:28vh;">
+      <div class="hero-card">
+        <div class="eyebrow"><span class="eyebrow-dot"></span>Student Portfolio</div>
+        <h1>Task Board</h1>
+        <p>Add tasks, mark them complete, and keep things organised.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="panel">
+
+        <!-- TTS bar -->
+        <div class="tts-bar">
+          <span id="ttsLabel">🔊 Click to hear this page read aloud</span>
+          <button class="btn secondary" id="ttsBtn" type="button">Read Page</button>
+          <button class="btn secondary" id="ttsStop" type="button">Stop</button>
+        </div>
+
+        <h2>To-Do List</h2>
+        <p class="meta">Press Enter or click Add to save a task. Click the circle to complete it, × to delete.</p>
+
+        <!-- Stats -->
+        <div class="todo-stats">
+          <div class="todo-stat">Total <span id="statTotal">0</span></div>
+          <div class="todo-stat">Done <span id="statDone">0</span></div>
+          <div class="todo-stat">Left <span id="statLeft">0</span></div>
+        </div>
+
+        <!-- Input -->
+        <div class="todo-input-row">
+          <input type="text" id="taskInput" placeholder="Add a new task…" maxlength="200" autocomplete="off" autofocus/>
+          <button class="btn" id="addTaskBtn" type="button">Add</button>
+          <button class="btn secondary" id="clearDoneBtn" type="button">Clear Done</button>
+        </div>
+
+        <!-- List -->
+        <div class="todo-list" id="todoList"></div>
+
+        <a class="back-link" href="./index.html">← Back</a>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    /* ─── Theme ─── */
+    (function(){
+      const dark = (localStorage.getItem('themeMode') || '') === 'dark' ||
+                   (!localStorage.getItem('themeMode') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+      document.body.classList.toggle('theme-dark', dark);
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    })();
+    document.getElementById('themeBtn').addEventListener('click', () => {
+      const dark = !document.body.classList.contains('theme-dark');
+      document.body.classList.toggle('theme-dark', dark);
+      localStorage.setItem('themeMode', dark ? 'dark' : 'light');
+      document.getElementById('themeBtn').textContent = dark ? '🌙' : '☀️';
+    });
+
+    /* ─── TTS ─── */
+    function speak(text) {
+      if (!window.speechSynthesis) return;
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.rate = 0.95; u.lang = 'en-US';
+      window.speechSynthesis.speak(u);
+    }
+
+    document.getElementById('ttsBtn').addEventListener('click', () => {
+      const tasks = JSON.parse(localStorage.getItem('portfolioTasks') || '[]');
+      if (!tasks.length) { speak('Your task list is empty. Add a task to get started.'); return; }
+      const done = tasks.filter(t => t.done).length;
+      const list = tasks.map((t,i) => `Task ${i+1}: ${t.text}. Status: ${t.done ? 'complete' : 'pending'}.`).join(' ');
+      speak(`You have ${tasks.length} tasks. ${done} completed, ${tasks.length - done} remaining. ${list}`);
+    });
+    document.getElementById('ttsStop').addEventListener('click', () => window.speechSynthesis && window.speechSynthesis.cancel());
+
+    /* ─── State — loaded fresh each render ─── */
+    function loadTasks() { return JSON.parse(localStorage.getItem('portfolioTasks') || '[]'); }
+    function saveTasks(tasks) { localStorage.setItem('portfolioTasks', JSON.stringify(tasks)); }
+
+    function escapeHtml(s) {
+      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+    }
+
+    /* ─── Render ─── */
+    function render() {
+      const tasks = loadTasks();
+      const list  = document.getElementById('todoList');
+
+      /* stats */
+      const done = tasks.filter(t => t.done).length;
+      document.getElementById('statTotal').textContent = tasks.length;
+      document.getElementById('statDone').textContent  = done;
+      document.getElementById('statLeft').textContent  = tasks.length - done;
+
+      /* list — always rebuild via innerHTML, never reuse stale DOM refs */
+      if (!tasks.length) {
+        list.innerHTML = `<div class="empty-state"><div class="empty-icon">📋</div>No tasks yet. Add one above!</div>`;
+        return;
+      }
+
+      list.innerHTML = tasks.map((task, idx) => `
+        <div class="todo-item${task.done ? ' done' : ''}">
+          <button class="todo-check" data-idx="${idx}" title="${task.done ? 'Undo' : 'Complete'}">
+            ${task.done ? '✓' : ''}
+          </button>
+          <span class="todo-text">${escapeHtml(task.text)}</span>
+          <button class="todo-del" data-idx="${idx}" title="Delete">×</button>
+        </div>
+      `).join('');
+    }
+
+    /* ─── Add ─── */
+    function addTask() {
+      const inp  = document.getElementById('taskInput');
+      const text = inp.value.trim();
+      if (!text) { inp.focus(); return; }
+      const tasks = loadTasks();
+      tasks.push({ text, done: false, id: Date.now() });
+      saveTasks(tasks);
+      render();
+      inp.value = '';
+      inp.focus();
+    }
+
+    document.getElementById('addTaskBtn').addEventListener('click', addTask);
+    document.getElementById('taskInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); addTask(); }
+    });
+
+    /* ─── Toggle / Delete via delegation — reads fresh from localStorage ─── */
+    document.getElementById('todoList').addEventListener('click', e => {
+      const check = e.target.closest('.todo-check');
+      const del   = e.target.closest('.todo-del');
+
+      if (check) {
+        const idx   = parseInt(check.dataset.idx);
+        const tasks = loadTasks();
+        if (tasks[idx]) { tasks[idx].done = !tasks[idx].done; saveTasks(tasks); render(); }
+      }
+
+      if (del) {
+        const idx   = parseInt(del.dataset.idx);
+        const tasks = loadTasks();
+        tasks.splice(idx, 1);
+        saveTasks(tasks);
+        render();
+      }
+    });
+
+    /* ─── Clear Done ─── */
+    document.getElementById('clearDoneBtn').addEventListener('click', () => {
+      const tasks = loadTasks();
+      const doneCnt = tasks.filter(t => t.done).length;
+      if (!doneCnt) return;
+      if (confirm(`Remove ${doneCnt} completed task${doneCnt > 1 ? 's' : ''}?`)) {
+        saveTasks(tasks.filter(t => !t.done));
+        render();
+      }
+    });
+
+    render();
+    setTimeout(() => speak('Task board loaded. Add a task using the input at the top.'), 500);
+  </script>
+</body>
+</html>
