@@ -152,12 +152,10 @@
         card.innerHTML = `
           <div class="q-num">Question ${i+1} of ${getAllQuestions().length}</div>
           <div class="q-text">${q.text}</div>
-          ${q.options.map((opt, oi) => `
-            <label>
-              <input type="radio" name="q${i}" value="${oi}"/>
-              <span>${letters[oi]}. ${opt}</span>
-            </label>
-          `).join('')}
+          ${q.options.map((opt, oi) => {
+            const safe = opt.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+            return `<label><input type="radio" name="q${i}" value="${oi}"/><span>${letters[oi]}. ${safe}</span></label>`;
+          }).join('')}
         `;
         form.appendChild(card);
       });
